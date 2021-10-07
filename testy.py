@@ -149,3 +149,19 @@ matrix1*matrix2 = {2}
 -----------------------------------------
 
 """.format(m1, m2, m1*m2))
+
+mm1 = np.random.randn(4, 5)
+print("""
+-----------------------------------------
+argmax:
+
+matrix = {0}
+
+np.argmax(matrix) = {1}
+
+np.argmax(matrix, axis=0) = {2}
+
+np.argmax(matrix, axis=1) = {3}
+-----------------------------------------
+
+""".format(mm1, np.argmax(mm1), np.argmax(mm1, axis=0), np.argmax(mm1, axis=1)))
