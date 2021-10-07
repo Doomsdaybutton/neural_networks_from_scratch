@@ -113,7 +113,6 @@ np.dot(v1, v2) = {5}
 -----------------------------------------
 
 """.format(v1, v2, v1*v2, np.sum([5, 6, 2]), np.sum(v1*v2), np.dot(v1, v2)))
-<<<<<<< HEAD
 
 print("""
 -----------------------------------------
@@ -150,5 +149,19 @@ matrix1*matrix2 = {2}
 -----------------------------------------
 
 """.format(m1, m2, m1*m2))
-=======
->>>>>>> 98ae309dce3a94300f69b438e50afde2ab7f3c2f
+
+mm1 = np.random.randn(4, 5)
+print("""
+-----------------------------------------
+argmax:
+
+matrix = {0}
+
+np.argmax(matrix) = {1}
+
+np.argmax(matrix, axis=0) = {2}
+
+np.argmax(matrix, axis=1) = {3}
+-----------------------------------------
+
+""".format(mm1, np.argmax(mm1), np.argmax(mm1, axis=0), np.argmax(mm1, axis=1)))
