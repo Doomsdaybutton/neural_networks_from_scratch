@@ -4,12 +4,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-np.random.seed(0)
+# np.random.seed(0)
 
 data = pd.read_csv('train.csv')
 data = np.array(data)
-# np.random.shuffle(data)
+np.random.shuffle(data)
 
+"""
 # reserve first 1000 samples for testing
 dataTest = data[:1000].T
 dataTrain = data[1000:].T
@@ -27,6 +28,7 @@ XTrain = XTrain / 255
 XTest = XTest / 255
 
 print(XTest, m, n)
+"""
 
 
 def randomInit(j, k):
@@ -81,7 +83,7 @@ class Layer:
         A = self.activation_function(Z)
         return Z, A
 
-    def backward(self, partial_error, learning_rate):
+    def backward(self, partial_error, learning_rate, batch_size):
         """
         Update parameters of this layer and return partial derivative of the cost with respect to the activation of the previous layer L-1.
 
@@ -94,8 +96,8 @@ class Layer:
         #
         error = partial_error*self.activation_function_derivative(self.Z)
 
-        dW = 1/m*np.dot(error, self.X.T)
-        dB = 1/m*np.sum(error, axis=1)
+        dW = 1/batch_size*np.dot(error, self.X.T)
+        dB = 1/batch_size*np.sum(error, axis=1)
         dA = np.dot(self.W.T, error)
         self.W -= dW*learning_rate
         self.B -= dB*learning_rate
@@ -119,22 +121,53 @@ def getAccuracy(A2, Y):
     return np.sum(predictions == Y) / Y.size
 
 
-X = XTest
+# 1000x784
+"""
+X = XTest.T
 Y = oneHot(YTest)
+"""
+
+m = 1000
+n = 784
+# m x n+1
+dataTrain = data[:m]
 
 layer1 = Layer(n, 10, relu, reluDerivative)
 layer2 = Layer(10, 10, softmax, blankActivationDerivative)
 learning_rate = 0.3
+mini_batch_size = 100
+epochs = 2000
 
-for i in range(10000):
-    Z, A = layer1.forward(X)
-    Z2, A2 = layer2.forward(A)
-    partial_error = A2-Y
-    layer2_error = layer2.backward(partial_error, learning_rate)
-    layer1_error = layer1.backward(layer2_error, learning_rate)
-    if i % 10 == 0:
-        print("Iteration: ", i, "; Accuracy: ", getAccuracy(A2, YTest))
+accuracies = []
 
+for i in range(epochs):
+    # m x n
+    np.random.shuffle(dataTrain)
+    for j in range(0, len(dataTrain), mini_batch_size):
+        # n+1 x mini_batch_size
+        mini_batch = dataTrain[j:j+mini_batch_size].T
+
+        # 1 x mini_batch_size
+        mini_batch_Y = mini_batch[0]
+
+        # n x mini_batch_size = 784 x mini_batch_size
+        mini_batch_X = (mini_batch[1:])/255
+
+        Z, A = layer1.forward(mini_batch_X)
+        Z2, A2 = layer2.forward(A)
+
+        partial_error = A2-oneHot(mini_batch_Y)
+        layer2_error = layer2.backward(
+            partial_error, learning_rate, len(mini_batch))
+        layer1_error = layer1.backward(
+            layer2_error, learning_rate, len(mini_batch))
+
+        if i % 25 == 0:
+            current_accuracy = getAccuracy(A2, mini_batch_Y)
+            print("Iteration: ", i, "; Accuracy: ", current_accuracy)
+            accuracies.append(current_accuracy)
+
+print("Max accuracy: ", np.max(accuracies))
 
 # print(X.shape)
 # print(layer1.W.shape)
