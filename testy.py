@@ -113,3 +113,39 @@ np.dot(v1, v2) = {5}
 -----------------------------------------
 
 """.format(v1, v2, v1*v2, np.sum([5, 6, 2]), np.sum(v1*v2), np.dot(v1, v2)))
+
+print("""
+-----------------------------------------
+np.sum:
+
+v1 = {0}
+
+np.sum(v1) = {1}
+
+matrix = {2}
+
+np.sum(matrix) = {3}
+
+np.sum(matrix, axis=0) = {4}
+
+np.sum(matrix, axis=1) = {5}
+
+np.sum(matrix, axis=1, keepdims=True) = {6}
+-----------------------------------------
+
+""".format(v1, np.sum(v1), matrix, np.sum(matrix), np.sum(matrix, axis=0), np.sum(matrix, axis=1), np.sum(matrix, axis=1, keepdims=True)))
+
+m1 = np.random.randn(2, 3)
+m2 = np.random.randn(2, 3)
+print("""
+-----------------------------------------
+multiplication of matrices (not dot product):
+
+matrix1 = {0}
+
+matrix2 = {1}
+
+matrix1*matrix2 = {2}
+-----------------------------------------
+
+""".format(m1, m2, m1*m2))
