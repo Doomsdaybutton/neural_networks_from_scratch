@@ -3,10 +3,12 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import json
 
 # np.random.seed(0)
 
-data = pd.read_csv('train.csv')
+
+data = pd.read_csv(__file__.replace('\\', '/')[:__file__.rfind('\\')+1]+'train.csv')
 data = np.array(data)
 np.random.shuffle(data)
 
