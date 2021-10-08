@@ -167,14 +167,22 @@ np.argmax(matrix, axis=1) = {3}
 """.format(mm1, np.argmax(mm1), np.argmax(mm1, axis=0), np.argmax(mm1, axis=1)))
 
 # batching
-mylist = np.zeros(100)
-for i in range(mylist.size):
-    mylist[i] = i
+# mylist = np.zeros(100)
+# for i in range(mylist.size):
+#     mylist[i] = i
 
-print(mylist)
-for i in range(0, mylist.size, 15):
-    minilist = mylist[i:i+15]
-    print(minilist)
+# print(mylist)
+# for i in range(0, mylist.size, 15):
+#     minilist = mylist[i:i+15]
+#     print(minilist)
 
-gh = np.random.randn(5, 7)
-print(len(gh))
+# gh = np.random.randn(5, 7)
+# print(len(gh))
+
+# import json
+# import os
+# config_file = open('//stu.net.fr.ch/perso$/Users/ProencaM/Documents/Data/MA/code/config.json')
+# config = json.load(config_file)
+# config_file.close()
+# print(config['path_to_training_data'])
+print(__file__.replace('\\', '/')[:__file__.find('test')])
