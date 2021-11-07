@@ -8,7 +8,8 @@ import json
 # np.random.seed(0)
 
 # get under https://storage.googleapis.com/kaggle-competitions-data/kaggle-v2/3004/861823/compressed/train.csv.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1633948773&Signature=Wg%2FzUFK8kw%2FQCP%2BPelFcluT5tkTHNZ4AA1qmF2Pq5ROghGbW9qJoDVH%2FesI%2Belwkcu%2Bq3tQWLppUmzkBDsJ22Shw4AHCt9vvDEJgHRq1QOquiffP4pg06NRcKmQbACbL0BnRUSqYA2w9o2r7aBhWScDFWyQGhDokVdENZAAyx9f5GMQzqIDHRSDXiJ4MAuqYKAeuchbKw5TtdomQ7DyxgUOIS%2BT%2Fioc3I3MKqFYrphszpXPRg9QKa8GfM8xXAP8WL3q%2BNtwkq%2FUNDNIDwUVheBC4rY7HcIKpc7hMbz9x05%2B6ZpcBtYTfjNu2VFDfx1R%2BiD%2BqfjZ0UFj2TCuOjCGXgA%3D%3D&response-content-disposition=attachment%3B+filename%3Dtrain.csv.zip
-data = pd.read_csv(__file__.replace('\\', '/')[:__file__.rfind('\\')+1]+'train.csv')
+data = pd.read_csv(__file__.replace('\\', '/')
+                   [:__file__.rfind('\\')+1]+'train.csv')
 data = np.array(data)
 np.random.shuffle(data)
 
@@ -59,7 +60,21 @@ def reluDerivative(Z):
 
 
 def softmax(Z):
-    return np.exp(Z) / sum(np.exp(Z))
+    # mathematical trick to prevent overflow (multiply both the numerator and denominator by e^K and choose K=-max(Z))
+    return np.exp(Z-np.max(Z)) / sum(np.exp(Z-np.max(Z)))
+
+
+def softmaxDerivative(A):
+    # TODO
+
+    # see http://saitcelebi.com/tut/output/part2.html
+    e = np.ones(len(A))
+    d = np.zeros((len(A.T), len(A), len(A)))
+    for i in range(len(A.T)):
+        a = A.T[i]
+        d[i] = (np.multiply(np.dot(a, e.T),
+                            (np.identity(len(a))-np.dot(e, a.T))))
+    return d.T
 
 
 class Layer:
@@ -135,6 +150,7 @@ n = 784
 dataTrain = data[:m]
 
 layer1 = Layer(n, 10, relu, reluDerivative)
+# TODO add softmax derivative
 layer2 = Layer(10, 10, softmax, blankActivationDerivative)
 learning_rate = 0.3
 mini_batch_size = 100
