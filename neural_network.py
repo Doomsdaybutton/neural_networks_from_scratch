@@ -41,20 +41,26 @@ def reluDerivative(Z):
 
 def softmax(Z):
     # mathematical trick to prevent overflow (multiply both the numerator and denominator by e^K and choose K=-max(Z))
-    return np.exp(Z-np.max(Z)) / sum(np.exp(Z-np.max(Z)))
+    # j x m
+    print(np.exp(Z-np.max(Z, axis=0, keepdims=True)) / np.sum(np.exp(Z -
+          np.max(Z, axis=0, keepdims=True)), axis=0, keepdims=True))
+    return np.exp(Z-np.max(Z, axis=0, keepdims=True)) / np.sum(np.exp(Z-np.max(Z, axis=0, keepdims=True)), axis=0, keepdims=True)
 
 
 def softmaxDerivative(A):
     # TODO
 
     # see http://saitcelebi.com/tut/output/part2.html
-    e = np.ones(len(A))
-    d = np.zeros((len(A.T), len(A), len(A)))
-    for i in range(len(A.T)):
-        a = A.T[i]
-        d[i] = (np.multiply(np.dot(a, e.T),
-                            (np.identity(len(a))-np.dot(e, a.T))))
-    return d.T
+    j, m = A.shape
+    e = np.ones((j, 1))
+    d = np.zeros((m, j, j))
+    I = np.identity(j)
+    for i in range(m):
+        a = np.reshape(A[:, i], (j, 1))
+        # j x j
+        temp = np.multiply(np.dot(a, e.T), (I-np.dot(e, a.T)))
+        d[i] = temp
+    return d
 
 
 class Layer:
@@ -74,9 +80,11 @@ class Layer:
         :param np.array<shape: 784 x m> X: Inputs of previous layer
         :return: Z, A
         """
+        # 784 x m
         self.X = X
 
         # see https://stackoverflow.com/a/19602209/15045364
+        # j x m
         Z = np.dot(self.W, X)+self.B[:, None]
         self.Z = Z
         A = self.activation_function(Z)
@@ -169,5 +177,8 @@ dataTrain = data[:m]
 neural_network = NeuralNetwork()
 neural_network.add_layer(n, 10, relu, reluDerivative)
 neural_network.add_layer(10, 10, softmax, blankActivationDerivative)
-neural_network.gradient_descent(
-    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
+#neural_network.gradient_descent(dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
+
+np.random.seed(0)
+rA = np.random.randn(3, 6)
+softmaxDerivative(rA)
