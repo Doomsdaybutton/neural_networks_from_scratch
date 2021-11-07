@@ -166,12 +166,8 @@ n = 784
 
 # m x n+1
 dataTrain = data[:m]
-<< << << < HEAD
-
-== == == =
 neural_network = NeuralNetwork()
 neural_network.add_layer(n, 10, relu, reluDerivative)
 neural_network.add_layer(10, 10, softmax, blankActivationDerivative)
 neural_network.gradient_descent(
     dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
->>>>>> > e93c1c2c547af5b4c4d3e0352d4a8c406f785653
