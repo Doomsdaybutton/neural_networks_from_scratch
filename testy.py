@@ -114,11 +114,14 @@ np.dot(v1, v2) = {5}
 
 """.format(v1, v2, v1*v2, np.sum([5, 6, 2]), np.sum(v1*v2), np.dot(v1, v2)))
 
+v3 = np.random.randn(1, 3)
 print("""
 -----------------------------------------
 np.sum:
 
 v1 = {0}
+
+v3 = {7}
 
 np.sum(v1) = {1}
 
@@ -131,9 +134,11 @@ np.sum(matrix, axis=0) = {4}
 np.sum(matrix, axis=1) = {5}
 
 np.sum(matrix, axis=1, keepdims=True) = {6}
+
+matrix-v3 = {8}
 -----------------------------------------
 
-""".format(v1, np.sum(v1), matrix, np.sum(matrix), np.sum(matrix, axis=0), np.sum(matrix, axis=1), np.sum(matrix, axis=1, keepdims=True)))
+""".format(v1, np.sum(v1), matrix, np.sum(matrix), np.sum(matrix, axis=0), np.sum(matrix, axis=1), np.sum(matrix, axis=1, keepdims=True), v3, matrix-v3))
 
 m1 = np.random.randn(2, 3)
 m2 = np.random.randn(2, 3)
