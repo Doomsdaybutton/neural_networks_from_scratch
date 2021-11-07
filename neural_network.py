@@ -13,26 +13,6 @@ data = pd.read_csv(__file__.replace('\\', '/')
 data = np.array(data)
 np.random.shuffle(data)
 
-"""
-# reserve first 1000 samples for testing
-dataTest = data[:1000].T
-dataTrain = data[1000:].T
-
-YTrain = dataTrain[0]
-XTrain = dataTrain[1:]
-YTest = dataTest[0]
-XTest = dataTest[1:]
-
-# m=1000, n=784=28*28
-n, m = XTest.shape
-
-# divide by 255
-XTrain = XTrain / 255
-XTest = XTest / 255
-
-print(XTest, m, n)
-"""
-
 
 def randomInit(j, k):
     # j is number of neurons in THIS layer and k is number of neurons in last layer
@@ -84,6 +64,8 @@ class Layer:
         self.B = B
         self.activation_function = activation_function
         self.activation_function_derivative = activation_function_derivative
+        self.k = k
+        self.j = j
 
     def forward(self, X):
         """
@@ -121,8 +103,49 @@ class Layer:
         return dA
 
 
-def gradientDescent():
-    pass
+class NeuralNetwork:
+    def __init__(self):
+        self.layers = []
+
+    def add_layer(self, k, j, activation_function, activation_function_derivative):
+        layer = Layer(k, j, activation_function,
+                      activation_function_derivative)
+        self.layers.append(layer)
+
+    def remove_layer(self, n=-1):
+        self.layers.remove(n)
+
+    def gradient_descent(self, dataTrain, learning_rate, mini_batch_size, epochs):
+        accuracies = []
+
+        for i in range(epochs):
+            # m x n
+            np.random.shuffle(dataTrain)
+            for j in range(0, len(dataTrain), mini_batch_size):
+                # n+1 x mini_batch_size
+                mini_batch = dataTrain[j:j+mini_batch_size].T
+
+                # 1 x mini_batch_size
+                mini_batch_Y = mini_batch[0]
+
+                # n x mini_batch_size = 784 x mini_batch_size
+                mini_batch_X = (mini_batch[1:])/255
+
+                current_A = mini_batch_X
+                for layer in self.layers:
+                    currentZ, current_A = layer.forward(current_A)
+
+                current_error = current_A-oneHot(mini_batch_Y)
+                for p in range(len(self.layers), 0, -1):
+                    current_error = self.layers[p-1].backward(
+                        current_error, learning_rate, len(mini_batch))
+
+                if i % 25 == 0:
+                    current_accuracy = getAccuracy(current_A, mini_batch_Y)
+                    print("Iteration: ", i, "; Accuracy: ", current_accuracy)
+                    accuracies.append(current_accuracy)
+
+        print("Max accuracy: ", np.max(accuracies))
 
 
 def oneHot(Y):
@@ -138,69 +161,17 @@ def getAccuracy(A2, Y):
     return np.sum(predictions == Y) / Y.size
 
 
-# 1000x784
-"""
-X = XTest.T
-Y = oneHot(YTest)
-"""
-
 m = 1000
 n = 784
+
 # m x n+1
 dataTrain = data[:m]
+<< << << < HEAD
 
-layer1 = Layer(n, 10, relu, reluDerivative)
-# TODO add softmax derivative
-layer2 = Layer(10, 10, softmax, blankActivationDerivative)
-learning_rate = 0.3
-mini_batch_size = 100
-epochs = 2000
-
-accuracies = []
-
-for i in range(epochs):
-    # m x n
-    np.random.shuffle(dataTrain)
-    for j in range(0, len(dataTrain), mini_batch_size):
-        # n+1 x mini_batch_size
-        mini_batch = dataTrain[j:j+mini_batch_size].T
-
-        # 1 x mini_batch_size
-        mini_batch_Y = mini_batch[0]
-
-        # n x mini_batch_size = 784 x mini_batch_size
-        mini_batch_X = (mini_batch[1:])/255
-
-        Z, A = layer1.forward(mini_batch_X)
-        Z2, A2 = layer2.forward(A)
-
-        partial_error = A2-oneHot(mini_batch_Y)
-        layer2_error = layer2.backward(
-            partial_error, learning_rate, len(mini_batch))
-        layer1_error = layer1.backward(
-            layer2_error, learning_rate, len(mini_batch))
-
-        if i % 25 == 0:
-            current_accuracy = getAccuracy(A2, mini_batch_Y)
-            print("Iteration: ", i, "; Accuracy: ", current_accuracy)
-            accuracies.append(current_accuracy)
-
-print("Max accuracy: ", np.max(accuracies))
-
-# print(X.shape)
-# print(layer1.W.shape)
-# print(layer1.B.shape)
-# Z, A = layer1.forward(X)
-# print(Z.shape, A.shape)
-# Z2, A2 = layer2.forward(A)
-# print(Z2.shape, A2.shape)
-
-# partial_error = A2-Y
-# print(partial_error.shape, A2.shape, Y.shape)
-# print(Y)
-
-# layer2_error = layer2.backward(partial_error, 0.1)
-# print(layer2_error.shape)
-
-# layer1_error = layer1.backward(layer2_error, 0.1)
-# print(layer1_error.shape)
+== == == =
+neural_network = NeuralNetwork()
+neural_network.add_layer(n, 10, relu, reluDerivative)
+neural_network.add_layer(10, 10, softmax, blankActivationDerivative)
+neural_network.gradient_descent(
+    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
+>>>>>> > e93c1c2c547af5b4c4d3e0352d4a8c406f785653
