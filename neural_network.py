@@ -1,6 +1,7 @@
 from ast import Param
 from functools import partial
 import numpy as np
+from numpy.core.defchararray import replace
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
@@ -26,7 +27,7 @@ def blankActivation(Z):
 
 
 def blankActivationDerivative(Z):
-    return 1
+    return np.ones(Z.shape)
 
 
 def relu(Z):
@@ -34,7 +35,7 @@ def relu(Z):
     return np.maximum(Z, 0)
 
 
-def reluDerivative(Z):
+def relu_derivative(Z):
     # the slope is one if Z is bigger than 0 and 0 if Z is smaller than 0 (and non differentiable for 0)
     return Z > 0
 
@@ -42,24 +43,33 @@ def reluDerivative(Z):
 def softmax(Z):
     # mathematical trick to prevent overflow (multiply both the numerator and denominator by e^K and choose K=-max(Z))
     # j x m
-    print(np.exp(Z-np.max(Z, axis=0, keepdims=True)) / np.sum(np.exp(Z -
-          np.max(Z, axis=0, keepdims=True)), axis=0, keepdims=True))
-    return np.exp(Z-np.max(Z, axis=0, keepdims=True)) / np.sum(np.exp(Z-np.max(Z, axis=0, keepdims=True)), axis=0, keepdims=True)
+    #print(np.exp(Z-np.max(Z, axis=0, keepdims=True)) / np.sum(np.exp(Z-np.max(Z, axis=0, keepdims=True)), axis=0, keepdims=True))
+
+    # normalized_Z = Z/np.max(np.abs(Z), axis=0, keepdims=True)
+    # print("lol", np.max(np.abs(Z), axis=0, keepdims=True), Z)
+
+    # normalized_Z = normalized_Z-np.max(normalized_Z, axis=0, keepdims=True)
+    # return np.exp(normalized_Z) / np.sum(np.exp(normalized_Z), axis=0, keepdims=True)
+
+    return np.exp(Z-np.max(Z, axis=0, keepdims=True))/np.sum(np.exp(Z-np.max(Z, axis=0, keepdims=True)), axis=0, keepdims=True)
 
 
-def softmaxDerivative(A):
+def softmax_derivative(A):
     # TODO
 
     # see http://saitcelebi.com/tut/output/part2.html
     j, m = A.shape
     e = np.ones((j, 1))
     d = np.zeros((m, j, j))
+    # j x j
     I = np.identity(j)
     for i in range(m):
+        # j x 1
         a = np.reshape(A[:, i], (j, 1))
         # j x j
         temp = np.multiply(np.dot(a, e.T), (I-np.dot(e, a.T)))
         d[i] = temp
+    # m x j x j
     return d
 
 
@@ -88,6 +98,7 @@ class Layer:
         Z = np.dot(self.W, X)+self.B[:, None]
         self.Z = Z
         A = self.activation_function(Z)
+        self.A = A
         return Z, A
 
     def backward(self, partial_error, learning_rate, batch_size):
@@ -100,8 +111,14 @@ class Layer:
         :rtype: np.array<shape: n_L-1 x m>
         """
 
-        #
-        error = partial_error*self.activation_function_derivative(self.Z)
+        if(self.activation_function_derivative == softmax_derivative):
+            error_per_sample = np.zeros((batch_size, self.j))
+            for i in range(batch_size):
+                error_per_sample[i] = np.dot(
+                    self.activation_function_derivative(self.A)[i], partial_error[:, i])
+            error = error_per_sample.T
+        else:
+            error = partial_error*self.activation_function_derivative(self.Z)
 
         dW = 1/batch_size*np.dot(error, self.X.T)
         dB = 1/batch_size*np.sum(error, axis=1)
@@ -144,15 +161,14 @@ class NeuralNetwork:
                     currentZ, current_A = layer.forward(current_A)
 
                 current_error = current_A-oneHot(mini_batch_Y)
-                for p in range(len(self.layers), 0, -1):
-                    current_error = self.layers[p-1].backward(
-                        current_error, learning_rate, len(mini_batch))
+                for l in range(len(self.layers), 0, -1):
+                    current_error = self.layers[l-1].backward(
+                        current_error, learning_rate, mini_batch_size)
 
-                if i % 25 == 0:
-                    current_accuracy = getAccuracy(current_A, mini_batch_Y)
-                    print("Iteration: ", i, "; Accuracy: ", current_accuracy)
-                    accuracies.append(current_accuracy)
-
+            if i % 25 == 0:
+                current_accuracy = getAccuracy(current_A, mini_batch_Y)
+                print("Iteration: ", i, "; Accuracy: ", current_accuracy)
+                accuracies.append(current_accuracy)
         print("Max accuracy: ", np.max(accuracies))
 
 
@@ -163,8 +179,8 @@ def oneHot(Y):
     return one_hot_Y.T
 
 
-def getAccuracy(A2, Y):
-    predictions = np.argmax(A2, axis=0)
+def getAccuracy(A, Y):
+    predictions = np.argmax(A, axis=0)
     print(predictions, Y)
     return np.sum(predictions == Y) / Y.size
 
@@ -175,10 +191,7 @@ n = 784
 # m x n+1
 dataTrain = data[:m]
 neural_network = NeuralNetwork()
-neural_network.add_layer(n, 10, relu, reluDerivative)
-neural_network.add_layer(10, 10, softmax, blankActivationDerivative)
-#neural_network.gradient_descent(dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
-
-np.random.seed(0)
-rA = np.random.randn(3, 6)
-softmaxDerivative(rA)
+neural_network.add_layer(n, 10, relu, relu_derivative)
+neural_network.add_layer(10, 10, softmax, softmax_derivative)
+neural_network.gradient_descent(
+    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
