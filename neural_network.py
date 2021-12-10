@@ -113,9 +113,10 @@ class Layer:
 
         if(self.activation_function_derivative == softmax_derivative):
             error_per_sample = np.zeros((batch_size, self.j))
+            partial_derivative = self.activation_function_derivative(self.A)
             for i in range(batch_size):
                 error_per_sample[i] = np.dot(
-                    self.activation_function_derivative(self.A)[i], partial_error[:, i])
+                    partial_derivative[i], partial_error[:, i])
             error = error_per_sample.T
         else:
             error = partial_error*self.activation_function_derivative(self.Z)
@@ -128,9 +129,18 @@ class Layer:
         return dA
 
 
+def mean_squared_error_derivative(Y, A):
+    return A-Y
+
+
+def cross_entropy_derivative(Y, A):
+    return -(Y/(A*np.log(2)))
+
+
 class NeuralNetwork:
-    def __init__(self):
+    def __init__(self, cost_function_derivative):
         self.layers = []
+        self.cost_function_derivative = cost_function_derivative
 
     def add_layer(self, k, j, activation_function, activation_function_derivative):
         layer = Layer(k, j, activation_function,
@@ -160,7 +170,8 @@ class NeuralNetwork:
                 for layer in self.layers:
                     currentZ, current_A = layer.forward(current_A)
 
-                current_error = current_A-oneHot(mini_batch_Y)
+                current_error = self.cost_function_derivative(
+                    one_hot(mini_batch_Y), current_A)
                 for l in range(len(self.layers), 0, -1):
                     current_error = self.layers[l-1].backward(
                         current_error, learning_rate, mini_batch_size)
@@ -172,7 +183,7 @@ class NeuralNetwork:
         print("Max accuracy: ", np.max(accuracies))
 
 
-def oneHot(Y):
+def one_hot(Y):
     one_hot_Y = np.zeros((Y.size, 10))
     for i in range(Y.size):
         one_hot_Y[i][Y[i]] = 1
@@ -190,7 +201,7 @@ n = 784
 
 # m x n+1
 dataTrain = data[:m]
-neural_network = NeuralNetwork()
+neural_network = NeuralNetwork(cross_entropy_derivative)
 neural_network.add_layer(n, 10, relu, relu_derivative)
 neural_network.add_layer(10, 10, softmax, softmax_derivative)
 neural_network.gradient_descent(
