@@ -5,4 +5,5 @@ train.csv
 Untitled-1.txt
 train.csv.zip
 config.json
-_pycache_/
+__pycache__/
+logs/
