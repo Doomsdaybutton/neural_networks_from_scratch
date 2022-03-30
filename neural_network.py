@@ -1,13 +1,9 @@
 import numpy as np
 import pandas as pd
+import time
+import logger
 
 # np.random.seed(0)
-
-# get under https://storage.googleapis.com/kaggle-competitions-data/kaggle-v2/3004/861823/compressed/train.csv.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1633948773&Signature=Wg%2FzUFK8kw%2FQCP%2BPelFcluT5tkTHNZ4AA1qmF2Pq5ROghGbW9qJoDVH%2FesI%2Belwkcu%2Bq3tQWLppUmzkBDsJ22Shw4AHCt9vvDEJgHRq1QOquiffP4pg06NRcKmQbACbL0BnRUSqYA2w9o2r7aBhWScDFWyQGhDokVdENZAAyx9f5GMQzqIDHRSDXiJ4MAuqYKAeuchbKw5TtdomQ7DyxgUOIS%2BT%2Fioc3I3MKqFYrphszpXPRg9QKa8GfM8xXAP8WL3q%2BNtwkq%2FUNDNIDwUVheBC4rY7HcIKpc7hMbz9x05%2B6ZpcBtYTfjNu2VFDfx1R%2BiD%2BqfjZ0UFj2TCuOjCGXgA%3D%3D&response-content-disposition=attachment%3B+filename%3Dtrain.csv.zip
-data = pd.read_csv(__file__.replace('\\', '/')
-                   [:__file__.rfind('\\')+1]+'train.csv')
-data = np.array(data)
-np.random.shuffle(data)
 
 
 def randomInit(j, k):
@@ -133,9 +129,10 @@ def cross_entropy_derivative(Y, A):
 
 
 class NeuralNetwork:
-    def __init__(self, cost_function_derivative):
+    def __init__(self, cost_function_derivative, logger):
         self.layers = []
         self.cost_function_derivative = cost_function_derivative
+        self.logger = logger
 
     def add_layer(self, k, j, activation_function, activation_function_derivative):
         layer = Layer(k, j, activation_function,
@@ -149,6 +146,7 @@ class NeuralNetwork:
         accuracies = []
 
         for i in range(epochs):
+            start_iteration = time.time()
             # m x n
             np.random.shuffle(dataTrain)
             for j in range(0, len(dataTrain), mini_batch_size):
@@ -171,6 +169,11 @@ class NeuralNetwork:
                     current_error = self.layers[l-1].backward(
                         current_error, learning_rate, mini_batch_size)
 
+            end_iteration = time.time()
+            iteration_time = end_iteration-start_iteration
+            self.logger.log_time_per_iteration(iteration_time)
+            self.logger.log_accuracy_at_iteration(
+                i, getAccuracy(current_A, mini_batch_Y))
             if i % 25 == 0:
                 current_accuracy = getAccuracy(current_A, mini_batch_Y)
                 print("Iteration: ", i, "; Accuracy: ", current_accuracy)
@@ -187,17 +190,36 @@ def one_hot(Y):
 
 def getAccuracy(A, Y):
     predictions = np.argmax(A, axis=0)
-    print(predictions, Y)
     return np.sum(predictions == Y) / Y.size
 
+
+# get under https://storage.googleapis.com/kaggle-competitions-data/kaggle-v2/3004/861823/compressed/train.csv.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1633948773&Signature=Wg%2FzUFK8kw%2FQCP%2BPelFcluT5tkTHNZ4AA1qmF2Pq5ROghGbW9qJoDVH%2FesI%2Belwkcu%2Bq3tQWLppUmzkBDsJ22Shw4AHCt9vvDEJgHRq1QOquiffP4pg06NRcKmQbACbL0BnRUSqYA2w9o2r7aBhWScDFWyQGhDokVdENZAAyx9f5GMQzqIDHRSDXiJ4MAuqYKAeuchbKw5TtdomQ7DyxgUOIS%2BT%2Fioc3I3MKqFYrphszpXPRg9QKa8GfM8xXAP8WL3q%2BNtwkq%2FUNDNIDwUVheBC4rY7HcIKpc7hMbz9x05%2B6ZpcBtYTfjNu2VFDfx1R%2BiD%2BqfjZ0UFj2TCuOjCGXgA%3D%3D&response-content-disposition=attachment%3B+filename%3Dtrain.csv.zip
+data = pd.read_csv(__file__.replace('\\', '/')
+                   [:__file__.rfind('\\')+1]+'train.csv')
+data = np.array(data)
+np.random.shuffle(data)
 
 m = 1000
 n = 784
 
 # m x n+1
 dataTrain = data[:m]
-neural_network = NeuralNetwork(cross_entropy_derivative)
-neural_network.add_layer(n, 10, relu, relu_derivative)
-neural_network.add_layer(10, 10, softmax, softmax_derivative)
-neural_network.gradient_descent(
-    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
+
+if __name__ == "__main__":
+
+    LEARNING_RATE = 0.3
+    MINI_BATCH_SIZE = 100
+    EPOCHS = 2000
+    COST_FUNCTION = "cross_entropy"
+
+    cost_functions = {"mean_squared_error": mean_squared_error_derivative,
+                      "cross_entropy": cross_entropy_derivative}
+
+    mylogger = logger.Logger(
+        LEARNING_RATE, MINI_BATCH_SIZE, EPOCHS, COST_FUNCTION)
+    neural_network = NeuralNetwork(cost_functions[COST_FUNCTION], mylogger)
+    neural_network.add_layer(n, 10, relu, relu_derivative)
+    neural_network.add_layer(10, 10, softmax, softmax_derivative)
+    neural_network.gradient_descent(
+        dataTrain, learning_rate=LEARNING_RATE, mini_batch_size=MINI_BATCH_SIZE, epochs=EPOCHS)
+    mylogger.close()
