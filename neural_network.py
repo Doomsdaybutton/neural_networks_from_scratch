@@ -3,8 +3,10 @@ from functools import partial
 import numpy as np
 from numpy.core.defchararray import replace
 import pandas as pd
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import json
+import cv2
 
 # np.random.seed(0)
 
@@ -83,6 +85,24 @@ class Layer:
         self.k = k
         self.j = j
 
+    def fforward(self, X):
+        """
+        Calculate Activations of this layer and return Z and A
+
+        :param np.array<shape: 784 x m> X: Inputs of previous layer
+        :return: Z, A
+        """
+        # 784 x m
+        self.X = X
+
+        # see https://stackoverflow.com/a/19602209/15045364
+        # j x m
+        Z = np.dot(self.W, X)+self.B
+        self.Z = Z
+        A = self.activation_function(Z)
+        self.A = A
+        return Z, A
+
     def forward(self, X):
         """
         Calculate Activations of this layer and return Z and A
@@ -150,6 +170,12 @@ class NeuralNetwork:
     def remove_layer(self, n=-1):
         self.layers.remove(n)
 
+    def forward(self, x):
+        current_A = x
+        for layer in self.layers:
+            currentZ, current_A = layer.forward(current_A)
+        return current_A
+
     def gradient_descent(self, dataTrain, learning_rate, mini_batch_size, epochs):
         accuracies = []
 
@@ -196,7 +222,7 @@ def getAccuracy(A, Y):
     return np.sum(predictions == Y) / Y.size
 
 
-m = 1000
+m = 2000
 n = 784
 
 # m x n+1
@@ -205,4 +231,48 @@ neural_network = NeuralNetwork(cross_entropy_derivative)
 neural_network.add_layer(n, 10, relu, relu_derivative)
 neural_network.add_layer(10, 10, softmax, softmax_derivative)
 neural_network.gradient_descent(
-    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=2000)
+    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=300)
+
+
+# while(True):
+#     print("Enter your image to be analyzed!")
+#     try:
+#         arr_input = list(map(int, input().split(",")))
+#     except:
+#         print("Input invalid!")
+#         continue
+#     arr = np.array(arr_input)
+
+#     plt.title("Your digit:")
+#     plt.imshow(arr.reshape(28, 28).T, cmap=cm.binary)
+#     plt.show()
+
+#     arr= arr.reshape((n, 1))
+
+#     y = np.multiply(100, neural_network.forward(arr))
+#     y_format = list(map(np.format_float_positional, y.round(4)))
+#     for i in range(0, len(y_format)):
+#         print(str(i), ": ", y_format[i], "% certainty")
+
+#     print("Continue? [y/n]")
+#     if(input() == "y"):
+#         continue
+#     else:
+#         break
+
+file = r'eight.jpeg'
+
+test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+test_image_resized = cv2.resize(
+    test_image, (28, 28), interpolation=cv2.INTER_LINEAR)
+plt.imshow(test_image_resized, cmap='gray')
+plt.show()
+
+arr = np.array(test_image_resized)/255
+arr = arr.reshape((n, 1))
+print(arr, arr.shape)
+
+y = np.multiply(100, neural_network.forward(arr))
+y_format = list(map(np.format_float_positional, y.round(4)))
+for i in range(0, len(y_format)):
+    print(str(i), ": ", y_format[i], "% certainty")
