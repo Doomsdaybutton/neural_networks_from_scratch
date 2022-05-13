@@ -260,17 +260,16 @@ neural_network.gradient_descent(
 #     else:
 #         break
 
-file = r'eight.jpeg'
+file = r'C:/test_5.jpg'
 
 test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-test_image_resized = cv2.resize(
-    test_image, (28, 28), interpolation=cv2.INTER_LINEAR)
+test_image_resized = cv2.bitwise_not(cv2.resize(
+    test_image, (28, 28), interpolation=cv2.INTER_LINEAR))
 plt.imshow(test_image_resized, cmap='gray')
 plt.show()
 
 arr = np.array(test_image_resized)/255
 arr = arr.reshape((n, 1))
-print(arr, arr.shape)
 
 y = np.multiply(100, neural_network.forward(arr))
 y_format = list(map(np.format_float_positional, y.round(4)))
