@@ -154,7 +154,7 @@ def mean_squared_error_derivative(Y, A):
 
 
 def cross_entropy_derivative(Y, A):
-    return -(Y/(A*np.log(2)))
+    return -(Y/((A+0.00001)*np.log(2)))
 
 
 class NeuralNetwork:
@@ -222,13 +222,14 @@ def getAccuracy(A, Y):
     return np.sum(predictions == Y) / Y.size
 
 
-m = 2000
+m = 5000
 n = 784
 
 # m x n+1
 dataTrain = data[:m]
 neural_network = NeuralNetwork(cross_entropy_derivative)
 neural_network.add_layer(n, 10, relu, relu_derivative)
+neural_network.add_layer(10, 10, relu, relu_derivative)
 neural_network.add_layer(10, 10, softmax, softmax_derivative)
 neural_network.gradient_descent(
     dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=300)
@@ -260,18 +261,38 @@ neural_network.gradient_descent(
 #     else:
 #         break
 
-file = r'C:/test_5.jpg'
 
-test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-test_image_resized = cv2.bitwise_not(cv2.resize(
-    test_image, (28, 28), interpolation=cv2.INTER_LINEAR))
-plt.imshow(test_image_resized, cmap='gray')
-plt.show()
+# file = r'M:/five.jpg'
 
-arr = np.array(test_image_resized)/255
-arr = arr.reshape((n, 1))
+# test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+# test_image_resized = cv2.bitwise_not(cv2.resize(
+#     test_image, (28, 28), interpolation=cv2.INTER_LINEAR))
+# plt.title("should be white on black background")
+# plt.imshow(test_image_resized, cmap='gray')
+# plt.show()
 
-y = np.multiply(100, neural_network.forward(arr))
-y_format = list(map(np.format_float_positional, y.round(4)))
-for i in range(0, len(y_format)):
-    print(str(i), ": ", y_format[i], "% certainty")
+# arr = np.array(test_image_resized)/255
+# arr = arr.reshape((n, 1))
+
+# y = np.multiply(100, neural_network.forward(arr))
+# y_format = list(map(np.format_float_positional, y.round(4)))
+# for i in range(0, len(y_format)):
+#     print(str(i), ": ", y_format[i], "% certainty")
+
+for i in range(0, 10):
+    current_img = data[m+np.random.randint(0, len(data[m:]))]
+    label = current_img[0]
+    current_img = current_img[1:]
+
+    current_img = current_img.reshape((28, 28))
+    plt.title("MNIST Image. Label:"+str(label))
+    plt.imshow(current_img, cmap='gray')
+    plt.show()
+
+    current_img = current_img.reshape((n, 1))
+    y = np.multiply(100, neural_network.forward(current_img))
+    y_format = list(map(np.format_float_positional, y.round(4)))
+    for i in range(0, len(y_format)):
+        print(str(i), ": ", y_format[i], "% certainty")
+
+    input()
