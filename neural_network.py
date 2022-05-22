@@ -279,7 +279,9 @@ neural_network.gradient_descent(
 # for i in range(0, len(y_format)):
 #     print(str(i), ": ", y_format[i], "% certainty")
 
-for i in range(0, 10):
+counter = 0
+number_of_examples = 10
+for i in range(0, number_of_examples):
     current_img = data[m+np.random.randint(0, len(data[m:]))]
     label = current_img[0]
     current_img = current_img[1:]
@@ -295,4 +297,30 @@ for i in range(0, 10):
     for i in range(0, len(y_format)):
         print(str(i), ": ", y_format[i], "% certainty")
 
+    print("Label: ", str(label), " Argmax: ", np.argmax(y))
+    if label == np.argmax(y):
+        counter += 1
     input()
+print("Testing Accuracy: ", np.round(counter/number_of_examples, 2))
+
+while True:
+    cin = input()
+    if(cin == -1):
+        break
+
+    file = r'M:/test.jpg'
+
+    test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    test_image_resized = cv2.bitwise_not(cv2.resize(
+        test_image, (28, 28), interpolation=cv2.INTER_LINEAR))
+    plt.title("should be white on black background")
+    plt.imshow(test_image_resized, cmap='gray')
+    plt.show()
+
+    arr = np.array(test_image_resized)/255
+    arr = arr.reshape((n, 1))
+
+    y = np.multiply(100, neural_network.forward(arr))
+    y_format = list(map(np.format_float_positional, y.round(4)))
+    for i in range(0, len(y_format)):
+        print(str(i), ": ", y_format[i], "% certainty")
