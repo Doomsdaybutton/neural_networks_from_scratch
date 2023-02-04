@@ -8,13 +8,9 @@ import matplotlib.pyplot as plt
 import json
 import cv2
 
-# np.random.seed(0)
+from logger import Logger
 
-# get under https://storage.googleapis.com/kaggle-competitions-data/kaggle-v2/3004/861823/compressed/train.csv.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1633948773&Signature=Wg%2FzUFK8kw%2FQCP%2BPelFcluT5tkTHNZ4AA1qmF2Pq5ROghGbW9qJoDVH%2FesI%2Belwkcu%2Bq3tQWLppUmzkBDsJ22Shw4AHCt9vvDEJgHRq1QOquiffP4pg06NRcKmQbACbL0BnRUSqYA2w9o2r7aBhWScDFWyQGhDokVdENZAAyx9f5GMQzqIDHRSDXiJ4MAuqYKAeuchbKw5TtdomQ7DyxgUOIS%2BT%2Fioc3I3MKqFYrphszpXPRg9QKa8GfM8xXAP8WL3q%2BNtwkq%2FUNDNIDwUVheBC4rY7HcIKpc7hMbz9x05%2B6ZpcBtYTfjNu2VFDfx1R%2BiD%2BqfjZ0UFj2TCuOjCGXgA%3D%3D&response-content-disposition=attachment%3B+filename%3Dtrain.csv.zip
-data = pd.read_csv(__file__.replace('\\', '/')
-                   [:__file__.rfind('\\')+1]+'train.csv')
-data = np.array(data)
-np.random.shuffle(data)
+# np.random.seed(0)
 
 
 def randomInit(j, k):
@@ -57,8 +53,6 @@ def softmax(Z):
 
 
 def softmax_derivative(A):
-    # TODO
-
     # see http://saitcelebi.com/tut/output/part2.html
     j, m = A.shape
     e = np.ones((j, 1))
@@ -159,8 +153,10 @@ def cross_entropy_derivative(Y, A):
 
 class NeuralNetwork:
     def __init__(self, cost_function_derivative):
+        self.iterations = 0
         self.layers = []
         self.cost_function_derivative = cost_function_derivative
+        self.logger = Logger()
 
     def add_layer(self, k, j, activation_function, activation_function_derivative):
         layer = Layer(k, j, activation_function,
@@ -180,6 +176,7 @@ class NeuralNetwork:
         accuracies = []
 
         for i in range(epochs):
+            self.iterations += 1
             # m x n
             np.random.shuffle(dataTrain)
             for j in range(0, len(dataTrain), mini_batch_size):
@@ -190,7 +187,7 @@ class NeuralNetwork:
                 mini_batch_Y = mini_batch[0]
 
                 # n x mini_batch_size = 784 x mini_batch_size
-                mini_batch_X = (mini_batch[1:])/255
+                mini_batch_X = mini_batch[1:]
 
                 current_A = mini_batch_X
                 for layer in self.layers:
@@ -201,39 +198,43 @@ class NeuralNetwork:
                 for l in range(len(self.layers), 0, -1):
                     current_error = self.layers[l-1].backward(
                         current_error, learning_rate, mini_batch_size)
+            self.logger.train_acc_at_iteration(
+                self.iterations, getAccuracy(current_A, mini_batch_Y))
 
-            if i % 25 == 0:
-                current_accuracy = getAccuracy(current_A, mini_batch_Y)
-                print("Iteration: ", i, "; Accuracy: ", current_accuracy)
-                accuracies.append(current_accuracy)
-        print("Max accuracy: ", np.max(accuracies))
+    def single_test(self, dataTest):
+        dataTest = dataTest.T
+        Y = dataTest[0]
+        X = dataTest[1:]
+        acc = getAccuracy(self.forward(X), Y)
+        self.logger.test_acc_at_iteration(self.iterations, acc)
+        return acc
+
+    def test(self, dataTest, dataTrain, learning_rate,
+             mini_batch_size, epochs, freq):
+        dataTest = dataTest.T
+        Y = dataTest[0]
+        X = dataTest[1:]
+
+        self.logger.test_acc_at_iteration(
+            self.iterations, getAccuracy(self.forward(X), Y))
+        for i in range(0, epochs, freq):
+            self.gradient_descent(
+                dataTrain, learning_rate, mini_batch_size, freq)
+            self.logger.test_acc_at_iteration(
+                self.iterations, getAccuracy(self.forward(X), Y))
 
 
 def one_hot(Y):
     one_hot_Y = np.zeros((Y.size, 10))
     for i in range(Y.size):
-        one_hot_Y[i][Y[i]] = 1
+        one_hot_Y[i][int(Y[i])] = 1
     return one_hot_Y.T
 
 
 def getAccuracy(A, Y):
     predictions = np.argmax(A, axis=0)
-    print(predictions, Y)
+    #print(predictions, Y)
     return np.sum(predictions == Y) / Y.size
-
-
-m = 5000
-n = 784
-
-# m x n+1
-dataTrain = data[:m]
-neural_network = NeuralNetwork(cross_entropy_derivative)
-neural_network.add_layer(n, 10, relu, relu_derivative)
-neural_network.add_layer(10, 10, relu, relu_derivative)
-neural_network.add_layer(10, 10, softmax, softmax_derivative)
-neural_network.gradient_descent(
-    dataTrain, learning_rate=0.3, mini_batch_size=100, epochs=300)
-
 
 # while(True):
 #     print("Enter your image to be analyzed!")
@@ -279,48 +280,50 @@ neural_network.gradient_descent(
 # for i in range(0, len(y_format)):
 #     print(str(i), ": ", y_format[i], "% certainty")
 
-counter = 0
-number_of_examples = 10
-for i in range(0, number_of_examples):
-    current_img = data[m+np.random.randint(0, len(data[m:]))]
-    label = current_img[0]
-    current_img = current_img[1:]
 
-    current_img = current_img.reshape((28, 28))
-    plt.title("MNIST Image. Label:"+str(label))
-    plt.imshow(current_img, cmap='gray')
-    plt.show()
+# demonstration
+# counter = 0
+# number_of_examples = 10
+# for i in range(0, number_of_examples):
+#     current_img = data[m+np.random.randint(0, len(data[m:]))]
+#     label = current_img[0]
+#     current_img = current_img[1:]
 
-    current_img = current_img.reshape((n, 1))
-    y = np.multiply(100, neural_network.forward(current_img))
-    y_format = list(map(np.format_float_positional, y.round(4)))
-    for i in range(0, len(y_format)):
-        print(str(i), ": ", y_format[i], "% certainty")
+#     current_img = current_img.reshape((28, 28))
+#     plt.title("MNIST Image. Label:"+str(label))
+#     plt.imshow(current_img, cmap='gray')
+#     plt.show()
 
-    print("Label: ", str(label), " Argmax: ", np.argmax(y))
-    if label == np.argmax(y):
-        counter += 1
-    input()
-print("Testing Accuracy: ", np.round(counter/number_of_examples, 2))
+#     current_img = current_img.reshape((n, 1))
+#     y = np.multiply(100, neural_network.forward(current_img))
+#     y_format = list(map(np.format_float_positional, y.round(4)))
+#     for i in range(0, len(y_format)):
+#         print(str(i), ": ", y_format[i], "% certainty")
 
-while True:
-    cin = input()
-    if(cin == -1):
-        break
+#     print("Label: ", str(label), " Argmax: ", np.argmax(y))
+#     if label == np.argmax(y):
+#         counter += 1
+#     input()
+# print("Testing Accuracy: ", np.round(counter/number_of_examples, 2))
 
-    file = r'M:/test.jpg'
+# while True:
+#     cin = input()
+#     if(cin == '-1'):
+#         break
 
-    test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    test_image_resized = cv2.bitwise_not(cv2.resize(
-        test_image, (28, 28), interpolation=cv2.INTER_LINEAR))
-    plt.title("should be white on black background")
-    plt.imshow(test_image_resized, cmap='gray')
-    plt.show()
+#     file = r'M:/test.jpg'
 
-    arr = np.array(test_image_resized)/255
-    arr = arr.reshape((n, 1))
+#     test_image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+#     test_image_resized = cv2.bitwise_not(cv2.resize(
+#         test_image, (28, 28), interpolation=cv2.INTER_LINEAR))
+#     plt.title("should be white on black background")
+#     plt.imshow(test_image_resized, cmap='gray')
+#     plt.show()
 
-    y = np.multiply(100, neural_network.forward(arr))
-    y_format = list(map(np.format_float_positional, y.round(4)))
-    for i in range(0, len(y_format)):
-        print(str(i), ": ", y_format[i], "% certainty")
+#     arr = np.array(test_image_resized)/255
+#     arr = arr.reshape((n, 1))
+
+#     y = np.multiply(100, neural_network.forward(arr))
+#     y_format = list(map(np.format_float_positional, y.round(4)))
+#     for i in range(0, len(y_format)):
+#         print(str(i), ": ", y_format[i], "% certainty")
