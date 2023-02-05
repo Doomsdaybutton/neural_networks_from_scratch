@@ -36,7 +36,7 @@ for i in range(100):
     model.add_layer(10, 10, nn.relu, nn.relu_derivative)
     model.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
     model.test(dataTest, dataTrain, learning_rate=0.3,
-               mini_batch_size=100, epochs=2500, freq=1)
+               mini_batch_size=500, epochs=2500, freq=1)
 
 logger2 = l.Logger('mnist', 'architecture2')
 
@@ -45,7 +45,7 @@ for i in range(100):
     model2.add_layer(784, 10, nn.relu, nn.relu_derivative)
     model2.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
     model2.test(dataTest, dataTrain, learning_rate=0.3,
-                mini_batch_size=100, epochs=2500, freq=1)
+                mini_batch_size=500, epochs=2500, freq=1)
 
 logger3 = l.Logger('mnist', 'architecture3')
 
@@ -54,7 +54,7 @@ for i in range(100):
     model3.add_layer(784, 10, nn.relu, nn.relu_derivative)
     model3.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
     model3.test(dataTest, dataTrain, learning_rate=0.3,
-                mini_batch_size=100, epochs=2500, freq=1)
+                mini_batch_size=500, epochs=2500, freq=1)
 
 logger4 = l.Logger('mnist', 'architecture4')
 
@@ -64,4 +64,4 @@ for i in range(100):
     model4.add_layer(10, 10, nn.relu, nn.relu_derivative)
     model4.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
     model4.test(dataTest, dataTrain, learning_rate=0.3,
-                mini_batch_size=100, epochs=2500, freq=1)
+                mini_batch_size=500, epochs=2500, freq=1)
