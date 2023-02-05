@@ -1,5 +1,6 @@
 from ast import Param
 from functools import partial
+import time
 import numpy as np
 from numpy.core.defchararray import replace
 import pandas as pd
@@ -152,11 +153,11 @@ def cross_entropy_derivative(Y, A):
 
 
 class NeuralNetwork:
-    def __init__(self, cost_function_derivative):
+    def __init__(self, logger, cost_function_derivative):
         self.iterations = 0
         self.layers = []
         self.cost_function_derivative = cost_function_derivative
-        self.logger = Logger()
+        self.logger = logger
 
     def add_layer(self, k, j, activation_function, activation_function_derivative):
         layer = Layer(k, j, activation_function,
@@ -176,6 +177,7 @@ class NeuralNetwork:
         accuracies = []
 
         for i in range(epochs):
+            tic = time.perf_counter()
             self.iterations += 1
             # m x n
             np.random.shuffle(dataTrain)
@@ -198,8 +200,10 @@ class NeuralNetwork:
                 for l in range(len(self.layers), 0, -1):
                     current_error = self.layers[l-1].backward(
                         current_error, learning_rate, mini_batch_size)
+            toc = time.perf_counter()
             self.logger.train_acc_at_iteration(
                 self.iterations, getAccuracy(current_A, mini_batch_Y))
+            self.logger.train_time_at_iteration(self.iterations, toc-tic)
 
     def single_test(self, dataTest):
         dataTest = dataTest.T
