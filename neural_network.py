@@ -198,7 +198,9 @@ class NeuralNetwork:
                     currentZ, current_A = layer.forward(current_A)
 
                 current_error = self.cost_function_derivative(
-                    one_hot(mini_batch_Y, self.layers[len(self.layers)-1].j), current_A)
+
+                    # or try one_hot(mini_batch_Y, self.layers[len(self.layers)-1].j), current_A
+                    custom_distr(mini_batch_Y, self.layers[len(self.layers)-1].j), current_A)
                 for l in range(len(self.layers), 0, -1):
                     current_error = self.layers[l-1].backward(
                         current_error, learning_rate, mini_batch.shape[1])
@@ -238,8 +240,26 @@ def one_hot(Y, j):
     return one_hot_Y.T
 
 
+def custom_distr(Y, j):
+    # jxminibatch
+    custom_Y = np.zeros((Y.size, j))
+    for i in range(Y.size):
+        if(int(Y[i]) == 29):
+            custom_Y[i][int(Y[i])-1] = 0.8
+            custom_Y[i][int(Y[i])-2] = 0.2
+        elif(int(Y[i]) == 1):
+            custom_Y[i][int(Y[i])-1] = 0.8
+            custom_Y[i][int(Y[i])] = 0.2
+        else:
+            custom_Y[i][int(Y[i])-1] = 0.8
+            custom_Y[i][int(Y[i])-2] = 0.1
+            custom_Y[i][int(Y[i])] = 0.1
+    return custom_Y.T
+
+
 def getAccuracy(A, Y):
-    predictions = np.argmax(A, axis=0)
+    # or try predictions = np.argmax(A, axis=0)
+    predictions = 1+np.argmax(A, axis=0)
     #print(predictions, Y)
     return np.sum(predictions == Y) / Y.size
 

@@ -42,7 +42,7 @@ for i in range(100):
     model.add_layer(7, 10, nn.relu, nn.relu_derivative)
     model.add_layer(10, 29, nn.softmax, nn.softmax_derivative)
     model.test(dataTest, dataTrain, learning_rate=20,
-               mini_batch_size=100, epochs=2500, freq=1)
+               mini_batch_size=5, epochs=2500, freq=20)
 
 logger2 = l.Logger('abalone', 'architecture2')
 

@@ -6,6 +6,16 @@ import numpy as np
 class Logger:
     def __init__(self, dataset, architecture, test_iteration=0):
         # init
+        if(not os.path.exists(__file__.replace('\\', '/')[:__file__.rfind('\\')+1]+'logs/')):
+            os.mkdir(__file__.replace('\\', '/')
+                     [:__file__.rfind('\\')+1]+'logs/')
+        if(not os.path.exists(__file__.replace('\\', '/')[:__file__.rfind('\\')+1]+'logs/'+dataset+'/')):
+            os.mkdir(__file__.replace('\\', '/')
+                     [:__file__.rfind('\\')+1]+'logs/'+dataset)
+        if(not os.path.exists(__file__.replace('\\', '/')[:__file__.rfind('\\')+1]+'logs/'+dataset+'/'+architecture+'/')):
+            os.mkdir(__file__.replace('\\', '/')
+                     [:__file__.rfind('\\')+1]+'logs/'+dataset+'/'+architecture+'/')
+
         self.dataset = dataset
         self.architecture = architecture
         self.path = __file__.replace(
