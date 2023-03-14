@@ -28,40 +28,21 @@ np.random.shuffle(dataTrain)
 
 dataTest = dataTrain[:1000]
 dataTrain = dataTrain[1000:6000]
-logger1 = l.Logger('mnist', 'architecture1')
+logger7 = l.Logger('mnist', 'architecture5')
 
 for i in range(100):
-    model = nn.NeuralNetwork(logger1, nn.cross_entropy_derivative)
+    model = nn.NeuralNetwork(logger5, nn.cross_entropy_derivative)
     model.add_layer(784, 10, nn.relu, nn.relu_derivative)
     model.add_layer(10, 10, nn.relu, nn.relu_derivative)
     model.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
     model.test(dataTest, dataTrain, learning_rate=0.3,
-               mini_batch_size=500, epochs=2500, freq=1)
+               mini_batch_size=100, epochs=2500, freq=1)
 
-logger2 = l.Logger('mnist', 'architecture2')
-
+logger8 = l.Logger('mnist', 'architecture6')
 for i in range(100):
-    model2 = nn.NeuralNetwork(logger2, nn.cross_entropy_derivative)
-    model2.add_layer(784, 10, nn.relu, nn.relu_derivative)
-    model2.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
-    model2.test(dataTest, dataTrain, learning_rate=0.3,
-                mini_batch_size=500, epochs=2500, freq=1)
-
-logger3 = l.Logger('mnist', 'architecture3')
-
-for i in range(100):
-    model3 = nn.NeuralNetwork(logger3, nn.mean_squared_error_derivative)
-    model3.add_layer(784, 10, nn.relu, nn.relu_derivative)
-    model3.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
-    model3.test(dataTest, dataTrain, learning_rate=0.3,
-                mini_batch_size=500, epochs=2500, freq=1)
-
-logger4 = l.Logger('mnist', 'architecture4')
-
-for i in range(100):
-    model4 = nn.NeuralNetwork(logger4, nn.mean_squared_error_derivative)
-    model4.add_layer(784, 10, nn.relu, nn.relu_derivative)
-    model4.add_layer(10, 10, nn.relu, nn.relu_derivative)
-    model4.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
-    model4.test(dataTest, dataTrain, learning_rate=0.3,
-                mini_batch_size=500, epochs=2500, freq=1)
+    model = nn.NeuralNetwork(logger6, nn.mean_squared_error_derivative)
+    model.add_layer(784, 10, nn.relu, nn.relu_derivative)
+    model.add_layer(10, 10, nn.relu, nn.relu_derivative)
+    model.add_layer(10, 10, nn.softmax, nn.softmax_derivative)
+    model.test(dataTest, dataTrain, learning_rate=0.3,
+               mini_batch_size=100, epochs=2500, freq=1)

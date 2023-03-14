@@ -185,6 +185,8 @@ class NeuralNetwork:
                 # n+1 x mini_batch_size
                 mini_batch = dataTrain[j:j+mini_batch_size].T
 
+                # if number of samples not divisible by mini_batch_size: see below
+
                 # 1 x mini_batch_size
                 mini_batch_Y = mini_batch[0]
 
@@ -196,10 +198,10 @@ class NeuralNetwork:
                     currentZ, current_A = layer.forward(current_A)
 
                 current_error = self.cost_function_derivative(
-                    one_hot(mini_batch_Y), current_A)
+                    one_hot(mini_batch_Y, self.layers[len(self.layers)-1].j), current_A)
                 for l in range(len(self.layers), 0, -1):
                     current_error = self.layers[l-1].backward(
-                        current_error, learning_rate, mini_batch_size)
+                        current_error, learning_rate, mini_batch.shape[1])
             toc = time.perf_counter()
             self.logger.train_acc_at_iteration(
                 self.iterations, getAccuracy(current_A, mini_batch_Y))
@@ -228,10 +230,11 @@ class NeuralNetwork:
                 self.iterations, getAccuracy(self.forward(X), Y))
 
 
-def one_hot(Y):
-    one_hot_Y = np.zeros((Y.size, 10))
+def one_hot(Y, j):
+    one_hot_Y = np.zeros((Y.size, j))
     for i in range(Y.size):
-        one_hot_Y[i][int(Y[i])] = 1
+        # or try one_hot_Y[i][int(Y[i])] = 1
+        one_hot_Y[i][int(Y[i])-1] = 1
     return one_hot_Y.T
 
 
